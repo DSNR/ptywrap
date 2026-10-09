@@ -44,6 +44,12 @@ ptywrap --init-config
 
 This writes `$XDG_CONFIG_HOME/ptywrap/config.json` (or `~/.config/ptywrap/config.json`) without overwriting an existing one.
 
+Show usage without entering the app:
+
+```sh
+ptywrap --help
+```
+
 ### Keybindings
 
 | Key | Action |

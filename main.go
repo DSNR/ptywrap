@@ -656,11 +656,26 @@ func orDefault(v, def string) string {
 	return v
 }
 
+func printUsage() {
+	fmt.Println(`ptywrap - terminal multiplexer TUI
+
+Usage:
+  ptywrap [options]
+
+Options:
+  --init-config   Write a default config file (without overwriting an existing one)
+  -h, --help      Show this help message`)
+}
+
 var progHolder *tea.Program
 
 func main() {
 	for _, arg := range os.Args[1:] {
-		if arg == "-init-config" || arg == "--init-config" {
+		switch arg {
+		case "-h", "-help", "--help":
+			printUsage()
+			return
+		case "-init-config", "--init-config":
 			if err := writeDefaultConfig(); err != nil {
 				fmt.Fprintln(os.Stderr, "error:", err)
 				os.Exit(1)
