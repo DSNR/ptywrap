@@ -210,6 +210,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if len(m.sessions) == 0 {
+		return m, nil
+	}
 	s := m.cur()
 
 	if s.exited {
@@ -307,6 +310,9 @@ func (m *model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m *model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
+	if len(m.sessions) == 0 {
+		return m, nil
+	}
 	s := m.cur()
 	switch msg.Button {
 	case tea.MouseButtonWheelUp:
@@ -673,17 +679,25 @@ func printUsage() {
 	fmt.Println(`ptywrap - terminal multiplexer TUI
 
 Usage:
-  ptywrap [options]
+  ptywrap [options]          Attach to (or start) the default session "main"
+  ptywrap attach [name]      Attach to (or start) the named session
+  ptywrap session list       List running sessions (alias: ptywrap ls)
+
+Sessions keep running in the background after you detach, until all of
+their tabs exit. Press F9 inside a session to detach.
 
 Options:
   --init-config   Write a default config file (without overwriting an existing one)
   -h, --help      Show this help message`)
 }
 
-var progHolder *tea.Program
+// progHolder receives messages from session reader goroutines; set to the
+// daemon's event-loop adapter in runDaemon.
+var progHolder msgSender
 
 func main() {
-	for _, arg := range os.Args[1:] {
+	args := os.Args[1:]
+	for _, arg := range args {
 		switch arg {
 		case "-h", "-help", "--help":
 			printUsage()
@@ -698,10 +712,27 @@ func main() {
 		}
 	}
 
-	m := &model{}
-	p := tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion())
-	progHolder = p
-	if _, err := p.Run(); err != nil {
+	var err error
+	switch {
+	case len(args) == 0:
+		err = attachSession(defaultSessionName)
+	case args[0] == daemonArg && len(args) == 2:
+		err = runDaemon(args[1])
+	case args[0] == "attach" && len(args) <= 2:
+		name := defaultSessionName
+		if len(args) == 2 {
+			name = args[1]
+		}
+		err = attachSession(name)
+	case len(args) == 1 && args[0] == "ls",
+		len(args) == 2 && args[0] == "session" && (args[1] == "list" || args[1] == "ls"):
+		err = listSessions()
+	default:
+		fmt.Fprintf(os.Stderr, "unknown arguments: %s\n\n", strings.Join(args, " "))
+		printUsage()
+		os.Exit(2)
+	}
+	if err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
