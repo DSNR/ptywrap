@@ -411,9 +411,15 @@ func exitStatus(cmd *exec.Cmd, err error) string {
 	return fmt.Sprintf("exited: %v", err)
 }
 
+// msgSender delivers messages into the model's event loop; satisfied by
+// *tea.Program and by the daemon's channel adapter.
+type msgSender interface {
+	Send(tea.Msg)
+}
+
 // startSession spawns a shell in a new pty and returns the session plus a
 // tea.Cmd that launches its reader goroutine.
-func startSession(p *tea.Program, idx int, cols, rows int, cfg Config) (*session, tea.Cmd) {
+func startSession(p msgSender, idx int, cols, rows int, cfg Config) (*session, tea.Cmd) {
 	s := &session{}
 	cmd1 := func() tea.Msg {
 		shell := cfg.Shell

@@ -5,6 +5,7 @@ A terminal multiplexer TUI built on [Bubble Tea](https://github.com/charmbracele
 ## Features
 
 - **Tabs** — multiple shell sessions in one window (`F2` new, `F3` close, `F4`/`F6` prev/next)
+- **Persistent named sessions** — detach (`F9`) and reattach later, tmux-style
 - **Scrollback** with mouse wheel, `PgUp`/`PgDn`, and a draggable scrollbar
 - **Search** through scrollback (`/` while scrolled back, `n`/`N` to jump matches)
 - **Mouse selection** — click-drag to select, double-click for word, triple-click for line; selection is copied to the clipboard automatically
@@ -36,6 +37,20 @@ Requires Go 1.27+.
 ptywrap
 ```
 
+### Sessions
+
+Like tmux, ptywrap runs your tabs inside a background session that survives after you detach or close the terminal.
+
+```sh
+ptywrap                  # attach to (or start) the default session "main"
+ptywrap attach work      # attach to (or start) the session "work"
+ptywrap session list     # list running sessions (alias: ptywrap ls)
+```
+
+Press `F9` to detach; the session keeps running and you can reattach later. Attaching from a second terminal takes over the session (the previous client exits with `[session attached elsewhere]`). A session ends, and its background process exits, once all of its tabs have exited.
+
+Each session is a daemon listening on `$XDG_RUNTIME_DIR/ptywrap/<name>.sock` (or `/tmp/ptywrap-$UID/<name>.sock`); its log is next to it as `<name>.log`.
+
 Generate a default config file to customize:
 
 ```sh
@@ -57,6 +72,7 @@ ptywrap --help
 | `F2` | New tab |
 | `F3` | Close current tab |
 | `F4` / `F6` | Previous / next tab |
+| `F9` | Detach from session (it keeps running) |
 | `PgUp` / `PgDn` | Scroll scrollback |
 | `Home` / `End` (while scrolled) | Jump to oldest / live |
 | `/` (while scrolled) | Start search |
