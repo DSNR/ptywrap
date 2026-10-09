@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Config holds user-tunable settings loaded from
@@ -21,13 +22,25 @@ type Config struct {
 }
 
 type Theme struct {
-	Preset         string    `json:"preset"`
-	BorderColor    string    `json:"borderColor"`
-	BellColor      string    `json:"bellColor"`
-	SelectionColor string    `json:"selectionColor"`
-	SearchColor    string    `json:"searchColor"`
-	SSHColor       string    `json:"sshColor"`
-	Palette        [16]string `json:"palette"` // ANSI 0-15 overrides; empty entries keep the terminal default
+	Preset         string            `json:"preset"`
+	BorderColor    string            `json:"borderColor"`
+	BellColor      string            `json:"bellColor"`
+	SelectionColor string            `json:"selectionColor"`
+	SearchColor    string            `json:"searchColor"`
+	SSHColor       string            `json:"sshColor"`
+	SSHHostColors  map[string]string `json:"sshHostColors"` // substring-matched against the ssh target (e.g. "forge", "65.45.87.101")
+	Palette        [16]string        `json:"palette"`       // ANSI 0-15 overrides; empty entries keep the terminal default
+}
+
+// sshColorFor returns the color for an ssh target string (e.g. "user@host"),
+// matching SSHHostColors keys as substrings of target, falling back to SSHColor.
+func (t Theme) sshColorFor(target string) string {
+	for host, color := range t.SSHHostColors {
+		if host != "" && color != "" && strings.Contains(target, host) {
+			return color
+		}
+	}
+	return orDefault(t.SSHColor, "3")
 }
 
 // presets are built-in named themes selectable via Theme.Preset. Palette
@@ -74,6 +87,10 @@ func defaultConfig() Config {
 			SelectionColor: "237",
 			SearchColor:    "58",
 			SSHColor:       "3",
+			SSHHostColors: map[string]string{
+				"forge":        "1", // red
+				"65.45.87.101": "4", // blue
+			},
 		},
 	}
 }
@@ -158,6 +175,9 @@ func loadConfig() Config {
 	}
 	if fileCfg.Theme.SSHColor != "" {
 		cfg.Theme.SSHColor = fileCfg.Theme.SSHColor
+	}
+	if len(fileCfg.Theme.SSHHostColors) > 0 {
+		cfg.Theme.SSHHostColors = fileCfg.Theme.SSHHostColors
 	}
 	for i, c := range fileCfg.Theme.Palette {
 		if c != "" {

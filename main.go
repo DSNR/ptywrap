@@ -581,8 +581,8 @@ func (m *model) View() string {
 	}
 
 	borderColor := theme.BorderColor
-	if s.sshActive() {
-		borderColor = orDefault(theme.SSHColor, "3")
+	if target := s.sshTarget(); target != "" {
+		borderColor = theme.sshColorFor(target)
 	}
 	if time.Now().Before(s.bellUntil) {
 		borderColor = orDefault(theme.BellColor, "196")

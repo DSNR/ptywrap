@@ -80,6 +80,10 @@ This writes `$XDG_CONFIG_HOME/ptywrap/config.json` (or `~/.config/ptywrap/config
     "selectionColor": "237",
     "searchColor": "58",
     "sshColor": "3",
+    "sshHostColors": {
+      "forge": "#a020f0",
+      "65.45.87.101": "4"
+    },
     "palette": ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
   }
 }
@@ -94,6 +98,7 @@ This writes `$XDG_CONFIG_HOME/ptywrap/config.json` (or `~/.config/ptywrap/config
 | `cursorStyle` | `"block"` (character shown inverted) or `"bar"` (thin vertical bar; blinks over, replacing, the character under it) |
 | `theme.preset` | One of `dracula`, `nord`, `gruvbox-dark`, `solarized-dark`; overridden by any explicit fields below it |
 | `theme.borderColor` / `bellColor` / `selectionColor` / `searchColor` / `sshColor` | ANSI or hex colors for pane border states |
+| `theme.sshHostColors` | Map of substring → ANSI/hex color; overrides `sshColor` when the ssh target (e.g. `user@host`) contains the key |
 | `theme.palette` | 16 ANSI color overrides (indices 0–15); empty entries keep the terminal default |
 
 ## Releases
