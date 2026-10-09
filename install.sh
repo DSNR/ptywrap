@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Installs the latest ptywrap release binary.
 #
-#   curl -fsSL https://raw.githubusercontent.com/DSNR/ptywrap/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/DSNR/ptywrap/master/install.sh | bash
 #
 # Env vars:
 #   PTYWRAP_VERSION   release tag to install (default: latest)

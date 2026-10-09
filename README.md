@@ -17,7 +17,7 @@ A terminal multiplexer TUI built on [Bubble Tea](https://github.com/charmbracele
 ## Install
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/DSNR/ptywrap/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/DSNR/ptywrap/master/install.sh | bash
 ```
 
 This downloads the latest release binary for your OS/arch into `~/.local/bin` (override with `PTYWRAP_INSTALL_DIR`). Make sure that directory is on your `PATH`.
