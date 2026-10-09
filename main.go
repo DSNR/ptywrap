@@ -232,8 +232,7 @@ func (m *model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	_, rows := m.innerSize()
-	cols, _ := m.innerSize()
+	cols, rows := m.innerSize()
 
 	if s.searchActive {
 		switch msg.Type {
@@ -532,16 +531,30 @@ func (m *model) View() string {
 		matchLine = s.searchMatches[s.searchIdx] - (h - s.scrollBy)
 	}
 
+	type styleKey struct {
+		fg       vt.Color
+		bg       vt.Color
+		mode     int16
+		selected bool
+	}
+	styleCache := make(map[styleKey]lipgloss.Style)
+
 	var b strings.Builder
+	var run strings.Builder
 	for y := 0; y < rows; y++ {
-		var run strings.Builder
+		run.Reset()
 		runFG, runBG, runMode := vt.Color(vt.DefaultFG), vt.Color(vt.DefaultBG), int16(0)
 		runSelected := false
 		flush := func() {
 			if run.Len() == 0 {
 				return
 			}
-			style := glyphStyle(vt.Glyph{FG: runFG, BG: runBG, Mode: runMode}, runSelected, selectionBG, theme.Palette)
+			key := styleKey{runFG, runBG, runMode, runSelected}
+			style, ok := styleCache[key]
+			if !ok {
+				style = glyphStyle(vt.Glyph{FG: runFG, BG: runBG, Mode: runMode}, runSelected, selectionBG, theme.Palette)
+				styleCache[key] = style
+			}
 			if y == matchLine {
 				style = searchStyle
 			}
