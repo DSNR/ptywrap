@@ -383,14 +383,18 @@ func (m *model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 				s.selecting = false
 				s.selStart = cellPos{from, vy}
 				s.selEnd = cellPos{to, vy}
-				clipboard.WriteAll(s.selectionText(cols, rows))
+				if m.cfg.CopyOnSelect {
+					clipboard.WriteAll(s.selectionText(cols, rows))
+				}
 				return m, nil
 			case 3:
 				s.hasSelection = true
 				s.selecting = false
 				s.selStart = cellPos{0, vy}
 				s.selEnd = cellPos{cols - 1, vy}
-				clipboard.WriteAll(s.selectionText(cols, rows))
+				if m.cfg.CopyOnSelect {
+					clipboard.WriteAll(s.selectionText(cols, rows))
+				}
 				return m, nil
 			}
 
@@ -413,14 +417,18 @@ func (m *model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 				s.selEnd = cellPos{vx, vy}
 				s.selecting = false
 				s.hasSelection = s.selStart != s.selEnd
-				if s.hasSelection {
+				if s.hasSelection && m.cfg.CopyOnSelect {
 					clipboard.WriteAll(s.selectionText(cols, rows))
 				}
 			}
 		}
 	case tea.MouseButtonRight:
 		if msg.Action == tea.MouseActionPress {
-			s.hasSelection = false
+			if s.hasSelection {
+				clipboard.WriteAll(s.selectionText(cols, rows))
+				s.hasSelection = false
+				return m, nil
+			}
 			if text, err := clipboard.ReadAll(); err == nil && s.ptmx != nil {
 				s.ptmx.Write([]byte("\x1b[200~"))
 				s.ptmx.Write([]byte(text))

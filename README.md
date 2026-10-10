@@ -8,7 +8,8 @@ A terminal multiplexer TUI built on [Bubble Tea](https://github.com/charmbracele
 - **Persistent named sessions** — detach (`F9`) and reattach later, tmux-style
 - **Scrollback** with mouse wheel, `PgUp`/`PgDn`, and a draggable scrollbar
 - **Search** through scrollback (`/` while scrolled back, `n`/`N` to jump matches)
-- **Mouse selection** — click-drag to select, double-click for word, triple-click for line; selection is copied to the clipboard automatically
+- **Mouse selection** — click-drag to select, double-click for word, triple-click for line
+- **Right-click** copies the current selection, or pastes the clipboard if nothing is selected
 - **Ctrl+click** opens URLs under the cursor
 - **SSH awareness** — the pane border changes color and shows the target host while an `ssh` session is in the foreground
 - **Bell flash** on terminal bell
@@ -80,11 +81,11 @@ ptywrap --help
 | `/` (while scrolled) | Start search |
 | `n` / `N` | Next / previous search match |
 | Mouse wheel | Scroll |
-| Click-drag | Select text (copies on release) |
+| Click-drag | Select text |
 | Double-click | Select word |
 | Triple-click | Select line |
 | Ctrl+click | Open URL under cursor |
-| Right-click | Paste clipboard |
+| Right-click | Copy selection, or paste clipboard if nothing is selected |
 
 ## Configuration
 
@@ -96,6 +97,7 @@ ptywrap --help
   "scrollbackSize": 5000,
   "logDir": "",
   "hideStatusBar": false,
+  "copyOnSelect": false,
   "cursorStyle": "block",
   "theme": {
     "preset": "",
@@ -119,6 +121,7 @@ ptywrap --help
 | `scrollbackSize` | Lines of history kept per tab |
 | `logDir` | If set, each session's raw output is logged to a file here |
 | `hideStatusBar` | Hide the tab bar |
+| `copyOnSelect` | Copy to the clipboard as soon as a selection is made (default: off; right-click copies/pastes instead) |
 | `cursorStyle` | `"block"` (character shown inverted) or `"bar"` (thin vertical bar; blinks over, replacing, the character under it) |
 | `theme.preset` | One of `dracula`, `nord`, `gruvbox-dark`, `solarized-dark`; overridden by any explicit fields below it |
 | `theme.borderColor` / `bellColor` / `selectionColor` / `searchColor` / `sshColor` | ANSI or hex colors for pane border states |

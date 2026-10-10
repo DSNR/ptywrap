@@ -17,6 +17,7 @@ type Config struct {
 	ScrollbackSize int    `json:"scrollbackSize"`
 	LogDir         string `json:"logDir"`
 	HideStatusBar  bool   `json:"hideStatusBar"`
+	CopyOnSelect   bool   `json:"copyOnSelect"` // copy to clipboard as soon as a selection is made (default: off; right-click copies/pastes instead)
 	CursorStyle    string `json:"cursorStyle"` // "block" (default) or "bar"
 	Theme          Theme  `json:"theme"`
 }
@@ -153,6 +154,7 @@ func loadConfig() Config {
 		cfg.LogDir = fileCfg.LogDir
 	}
 	cfg.HideStatusBar = fileCfg.HideStatusBar
+	cfg.CopyOnSelect = fileCfg.CopyOnSelect
 	if fileCfg.CursorStyle != "" {
 		cfg.CursorStyle = fileCfg.CursorStyle
 	}
