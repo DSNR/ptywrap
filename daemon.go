@@ -99,6 +99,11 @@ type clientInputMsg struct {
 }
 type clientGoneMsg struct{ c *clientConn }
 type statusReqMsg struct{ reply chan sessionStatus }
+type killReqMsg struct{}
+type renameReqMsg struct {
+	newName string
+	reply   chan error
+}
 
 type daemon struct {
 	name    string
@@ -179,6 +184,26 @@ func (d *daemon) handleConn(conn net.Conn) {
 			writeJSON(conn, msgStatus, st)
 		case <-time.After(2 * time.Second):
 		}
+		return
+	case msgKill:
+		defer conn.Close()
+		d.ch <- killReqMsg{}
+		return
+	case msgRename:
+		defer conn.Close()
+		reply := make(chan error, 1)
+		d.ch <- renameReqMsg{newName: string(payload), reply: reply}
+		var rep renameReply
+		select {
+		case err := <-reply:
+			if err != nil {
+				rep.Error = err.Error()
+			}
+		case <-time.After(2 * time.Second):
+			rep.Error = "timed out"
+		}
+		conn.SetWriteDeadline(time.Now().Add(time.Second))
+		writeJSON(conn, msgRename, rep)
 		return
 	case msgAttach:
 	default:
@@ -291,6 +316,11 @@ func (d *daemon) loop(sig chan os.Signal) {
 					Started:  d.started,
 					Attached: d.client != nil,
 				}
+			case killReqMsg:
+				d.shutdown(reasonKilled)
+				return
+			case renameReqMsg:
+				msg.reply <- d.rename(msg.newName)
 			default:
 				d.update(msg)
 				markDirty()
@@ -318,6 +348,36 @@ func (d *daemon) run(cmd tea.Cmd) {
 			d.ch <- msg
 		}
 	}()
+}
+
+// rename moves the daemon to a new socket path, leaving any already
+// attached client's connection untouched.
+func (d *daemon) rename(newName string) error {
+	if newName == d.name {
+		return nil
+	}
+	if err := validateSessionName(newName); err != nil {
+		return err
+	}
+	if err := ensureSocketDir(); err != nil {
+		return err
+	}
+	if conn, err := dialSession(newName); err == nil {
+		conn.Close()
+		return fmt.Errorf("session %q already exists", newName)
+	}
+	newPath := socketPath(newName)
+	os.Remove(newPath)
+	newLn, err := net.Listen("unix", newPath)
+	if err != nil {
+		return err
+	}
+	oldLn, oldName := d.ln, d.name
+	d.ln, d.name = newLn, newName
+	oldLn.Close()
+	go d.acceptLoop()
+	os.Rename(daemonLogPath(oldName), daemonLogPath(newName))
+	return nil
 }
 
 // shutdown removes the socket first (so a fresh attach starts a new

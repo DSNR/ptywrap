@@ -45,6 +45,8 @@ Like tmux, ptywrap runs your tabs inside a background session that survives afte
 ptywrap                  # attach to (or start) the default session "main"
 ptywrap attach work      # attach to (or start) the session "work"
 ptywrap session list     # list running sessions (alias: ptywrap ls)
+ptywrap session kill work      # end a session and all its tabs (alias: ptywrap kill work)
+ptywrap session rename work dev  # rename a running session
 ```
 
 Press `F9` to detach; the session keeps running and you can reattach later. Attaching from a second terminal takes over the session (the previous client exits with `[session attached elsewhere]`). A session ends, and its background process exits, once all of its tabs have exited.

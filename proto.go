@@ -27,6 +27,8 @@ const (
 	msgStatus byte = 'S' // c→d: status request (no payload); d→c: sessionStatus (JSON)
 	msgFrame  byte = 'F' // d→c: raw rendered frame
 	msgClose  byte = 'X' // d→c: reason string; daemon closes the conn after
+	msgKill   byte = 'Z' // c→d: no payload; daemon shuts the session down
+	msgRename byte = 'N' // c→d: new name (string); d→c: renameReply (JSON)
 )
 
 // Reasons sent with msgClose.
@@ -54,6 +56,10 @@ type attachHello struct {
 type winSize struct {
 	Width  int `json:"w"`
 	Height int `json:"h"`
+}
+
+type renameReply struct {
+	Error string `json:"error,omitempty"`
 }
 
 type sessionStatus struct {

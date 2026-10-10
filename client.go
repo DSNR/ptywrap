@@ -195,6 +195,56 @@ func listSessions() error {
 	return tw.Flush()
 }
 
+// killSession tells a running session's daemon to shut down, killing any
+// shells still running in it.
+func killSession(name string) error {
+	if err := validateSessionName(name); err != nil {
+		return err
+	}
+	conn, err := dialSession(name)
+	if err != nil {
+		return fmt.Errorf("session %q is not running", name)
+	}
+	defer conn.Close()
+	conn.SetDeadline(time.Now().Add(3 * time.Second))
+	return writeMsg(conn, msgKill, nil)
+}
+
+// renameSession asks a running session's daemon to listen on a new name,
+// atomically freeing the old name for reuse.
+func renameSession(oldName, newName string) error {
+	if err := validateSessionName(oldName); err != nil {
+		return err
+	}
+	if err := validateSessionName(newName); err != nil {
+		return err
+	}
+	conn, err := dialSession(oldName)
+	if err != nil {
+		return fmt.Errorf("session %q is not running", oldName)
+	}
+	defer conn.Close()
+	conn.SetDeadline(time.Now().Add(3 * time.Second))
+	if err := writeMsg(conn, msgRename, []byte(newName)); err != nil {
+		return err
+	}
+	typ, payload, err := readMsg(conn)
+	if err != nil {
+		return err
+	}
+	if typ != msgRename {
+		return fmt.Errorf("unexpected reply %q", typ)
+	}
+	var rep renameReply
+	if err := json.Unmarshal(payload, &rep); err != nil {
+		return err
+	}
+	if rep.Error != "" {
+		return fmt.Errorf("%s", rep.Error)
+	}
+	return nil
+}
+
 func querySession(name string) (sessionStatus, error) {
 	var st sessionStatus
 	conn, err := dialSession(name)

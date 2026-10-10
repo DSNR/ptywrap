@@ -682,6 +682,8 @@ Usage:
   ptywrap [options]          Attach to (or start) the default session "main"
   ptywrap attach [name]      Attach to (or start) the named session
   ptywrap session list       List running sessions (alias: ptywrap ls)
+  ptywrap session kill <name>     Kill a session, ending all its tabs (alias: ptywrap kill <name>)
+  ptywrap session rename <old> <new>  Rename a running session
 
 Sessions keep running in the background after you detach, until all of
 their tabs exit. Press F9 inside a session to detach.
@@ -727,6 +729,16 @@ func main() {
 	case len(args) == 1 && args[0] == "ls",
 		len(args) == 2 && args[0] == "session" && (args[1] == "list" || args[1] == "ls"):
 		err = listSessions()
+	case len(args) == 2 && args[0] == "session" && args[1] == "kill",
+		len(args) == 1 && args[0] == "kill":
+		fmt.Fprintln(os.Stderr, "error: missing session name")
+		os.Exit(2)
+	case len(args) == 3 && args[0] == "session" && args[1] == "kill":
+		err = killSession(args[2])
+	case len(args) == 2 && args[0] == "kill":
+		err = killSession(args[1])
+	case len(args) == 4 && args[0] == "session" && args[1] == "rename":
+		err = renameSession(args[2], args[3])
 	default:
 		fmt.Fprintf(os.Stderr, "unknown arguments: %s\n\n", strings.Join(args, " "))
 		printUsage()
